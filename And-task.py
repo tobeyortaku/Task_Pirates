@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from googletrans import Translator
+from math import sqrt
 
 
 class Pirates:
@@ -23,12 +24,19 @@ class Pirates:
             case 'I':
                 new_sentence = "Pirate King is " + ' '.join(words[2:])
             case _:
-                new_sentence = "Pirates are " + ' '.join(words[2:])
+                new_sentence = str(self.count_divisor()) + \
+                    " Pirates are " + ' '.join(words[2:])
         return new_sentence
 
-    def magic_number(self):
-        pirates_count = self.magic_number/3
-        return pirates_count
+    def count_divisor(self):
+        number = self.magic_number
+        divisor_count = 0
+        for i in range(1, int(sqrt(number)) + 1):
+            if (number % i == 0):
+                divisor_count = divisor_count + 2
+        if sqrt(number).is_integer():
+            divisor_count = divisor_count - 1
+        return divisor_count
 
     def translation_json(self):
         translator = Translator()
@@ -41,6 +49,7 @@ class Pirates:
 
 app = Flask(__name__)
 
+
 @app.route('/', methods=['POST'])
 def handle_json():
     data = request.get_json(force=True)
@@ -50,6 +59,7 @@ def handle_json():
         return jsonify(error=pirate.error_checker())
     else:
         return pirate.translation_json()
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
