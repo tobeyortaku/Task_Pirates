@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from googletrans import Translator
 from math import sqrt
+import spacy
+from langdetect import detect
 
 
 class Pirates:
@@ -9,23 +11,35 @@ class Pirates:
         self.magic_number = magic_number
 
     def error_checker(self):
-        words = self.sentence.split()
 
-        if words[0] in ['am', 'is', 'are', 'Am', 'Is', 'Are']:
+        if detect(self.sentence) != 'en':
+            return "Please use proper english sentence"
+        elif self.get_subject() == None:
             return "Where am I?"
         elif type(self.magic_number) != int:
             return "Where is magic?"
         else:
             pass
 
+    def get_subject(self):
+        nlp = spacy.load("en_core_web_sm")
+        doc = nlp(self.sentence)
+
+        for token in doc:
+            if ("subj" in token.dep_):
+                subtree = list(token.subtree)
+                start = subtree[0].i
+                end = subtree[-1].i + 1
+                return str(doc[start:end])
+
     def sentence_editor(self):
-        words = self.sentence.split()
-        match words[0]:
+        subject = self.get_subject()
+        match subject:
             case 'I':
-                new_sentence = "Pirate King is " + ' '.join(words[2:])
+                new_sentence = self.sentence.replace(subject, 'Pirate king')
             case _:
                 new_sentence = str(self.count_divisor()) + \
-                    " Pirates are " + ' '.join(words[2:])
+                    self.sentence.replace(subject, ' Pirates')
         return new_sentence
 
     def count_divisor(self):
@@ -53,7 +67,11 @@ app = Flask(__name__)
 @app.route('/', methods=['POST'])
 def handle_json():
     data = request.get_json(force=True)
-    pirate = Pirates(data['sentence'], data['magic_number'])
+
+    try:
+        pirate = Pirates(data['sentence'], data['magic_number'])
+    except:
+        return jsonify(error="Invalid json request")
 
     if pirate.error_checker():
         return jsonify(error=pirate.error_checker())
