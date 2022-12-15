@@ -11,8 +11,9 @@ class Pirates:
         self.magic_number = magic_number
 
     def error_checker(self):
-
-        if detect(self.sentence) != 'en':
+        if type(self.sentence) != str:
+            return "Sentence has to be str type or can not be null."
+        elif detect(self.sentence) != 'en':
             return "Please use proper english sentence"
         elif self.get_subject() == None:
             return "Where am I?"
@@ -32,14 +33,33 @@ class Pirates:
                 end = subtree[-1].i + 1
                 return str(doc[start:end])
 
+    def tobe_changer(self):
+        sentence = self.sentence
+        tobes = ['am', 'are', 'is']
+        tobe_matches = [tobe for tobe in tobes if tobe in sentence]
+        if tobe_matches == None:
+            for match in tobe_matches:
+                changed_sentence = sentence.replace(match, '<to/be>')
+            return changed_sentence
+        else:
+            return sentence
+
     def sentence_editor(self):
         subject = self.get_subject()
+        tobe_changed_sentence = self.tobe_changer()
         match subject:
             case 'I':
-                new_sentence = self.sentence.replace(subject, 'Pirate king')
+                subject_tobe_changed_sentence = tobe_changed_sentence.replace(
+                    subject, 'Pirate king')
+                new_sentence = subject_tobe_changed_sentence.replace(
+                    '<to/be>', 'is')
+
             case _:
-                new_sentence = str(self.count_divisor()) + \
-                    self.sentence.replace(subject, ' Pirates')
+                subject_tobe_changed_sentence = str(self.count_divisor()) + \
+                    tobe_changed_sentence.replace(subject, ' Pirates')
+                new_sentence = subject_tobe_changed_sentence.replace(
+                    '<to/be>', 'are')
+
         return new_sentence
 
     def count_divisor(self):
